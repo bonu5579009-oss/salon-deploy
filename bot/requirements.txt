@@ -1,0 +1,7 @@
+aiogram
+python-dotenv
+aiohttp
+qrcode
+pillow
+pydantic
+pydantic-settings
