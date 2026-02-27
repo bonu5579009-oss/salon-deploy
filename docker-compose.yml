@@ -1,0 +1,63 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: barber-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./barber_queue.db
+      - SECRET_KEY=SUPER_SECRET_KEY_CHANGEME  # CHANGE THIS IN PRODUCTION
+      - ALGORITHM=HS256
+    volumes:
+      - ./backend/barber_queue.db:/app/barber_queue.db
+    networks:
+      - barber-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: barber-bot
+    environment:
+      - API_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - barber-network
+    restart: unless-stopped
+    env_file:
+      - ./bot/.env
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: barber-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - barber-network
+    restart: unless-stopped
+
+networks:
+  barber-network:
+    driver: bridge
+
+volumes:
+  backend_db:
+    driver: local
