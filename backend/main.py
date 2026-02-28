@@ -193,17 +193,20 @@ def run_migrations():
         db = SessionLocal()
         try:
             insp = sa_inspect(engine)
-            user_columns = [col['name'] for col in insp.get_columns('users')]
+            table_names = insp.get_table_names()
+            
+            if 'users' in table_names:
+                user_columns = [col['name'] for col in insp.get_columns('users')]
 
-            if 'is_active' not in user_columns:
-                db.execute(text("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1"))
-                db.commit()
-                print("Migration OK: Added is_active column")
+                if 'is_active' not in user_columns:
+                    db.execute(text("ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1"))
+                    db.commit()
+                    print("Migration OK: Added is_active column")
 
-            if 'phone' not in user_columns:
-                db.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR"))
-                db.commit()
-                print("✅ Migration: Added 'phone' column to users")
+                if 'phone' not in user_columns:
+                    db.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR"))
+                    db.commit()
+                    print("✅ Migration: Added 'phone' column to users")
 
             # Ensure broadcast_logs table exists
             if 'broadcast_logs' not in table_names:
